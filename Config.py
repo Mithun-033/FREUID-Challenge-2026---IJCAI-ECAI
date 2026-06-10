@@ -26,3 +26,5 @@ class config:
     
     dim4 : int = 96*8
     num_block4 : int = 3
+
+    expansion_ratio : int = 6

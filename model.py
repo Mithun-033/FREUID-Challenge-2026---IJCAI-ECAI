@@ -60,7 +60,7 @@ class ConvNext(nn.Module):
         channels: Number of input and output channels for the block.
     """
 
-    def __init__(self,channels):
+    def __init__(self,channels,config):
         super().__init__()
 
         self.depth_conv=nn.Conv2d(
@@ -77,14 +77,14 @@ class ConvNext(nn.Module):
 
         self.up_proj=nn.Conv2d(
             channels,
-            6*channels,
+            config.expansion_ratio*channels,
             kernel_size=1
         )
 
         self.gelu=nn.GELU()
 
         self.down_proj=nn.Conv2d(
-            channels*6,
+            channels*config.expansion_ratio,
             channels,
             kernel_size=1
         )
@@ -144,7 +144,8 @@ class DownSampler(nn.Module):
             Tensor of shape (B, 2*C, H//2, W//2).
         """
         return self.conv(self.norm(img)) #(B,2*C,H/2,W/2)
-    
+
+
 class Model(nn.Module):
     """Full ConvNeXt-like model that outputs a single scalar per input.
 
@@ -169,19 +170,19 @@ class Model(nn.Module):
         )
 
         # (B,96,H,W)
-        self.block1=nn.ModuleList([ConvNext(config.dim1) for _ in range(config.num_block1)])
+        self.block1=nn.ModuleList([ConvNext(config.dim1,config) for _ in range(config.num_block1)])
         self.down_sample_1=DownSampler(config.dim1)
         
         # (B,192,H//2,W//2)
-        self.block2=nn.ModuleList([ConvNext(config.dim2) for _ in range(config.num_block2)])
+        self.block2=nn.ModuleList([ConvNext(config.dim2,config) for _ in range(config.num_block2)])
         self.down_sample_2=DownSampler(config.dim2)
 
         # (B,384,H//4,W//4)
-        self.block3=nn.ModuleList([ConvNext(config.dim3) for _ in range(config.num_block3)])
+        self.block3=nn.ModuleList([ConvNext(config.dim3,config) for _ in range(config.num_block3)])
         self.down_sample_3=DownSampler(config.dim3)
 
         # (B,768,H//8,W//4)
-        self.block4=nn.ModuleList([ConvNext(config.dim4) for _ in range(config.num_block4)])
+        self.block4=nn.ModuleList([ConvNext(config.dim4,config) for _ in range(config.num_block4)])
         self.global_pool=nn.AdaptiveAvgPool2d(1)
 
         # (B,768,1,1)
@@ -227,9 +228,9 @@ class Model(nn.Module):
     
 if __name__=="__main__":
     print("Loading model...")
-    model=Model(config()).to(device)
+    model=Model(config()).to(device).to(torch.channels_last)
     print("Model Loaded!")
-    
+
     #model=torch.compile(model).to(device)
 
     print("Generating summary...")
