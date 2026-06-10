@@ -1,0 +1,1 @@
+# The FREUID Challenge 2026 - IJCAI-ECAI
