@@ -83,3 +83,20 @@ class MuonAdamW(nn.Module):
         self.adam.zero_grad()
         self.muon.zero_grad()
 
+    def state_dict(self) -> dict:
+        ''' Returns the state dict of both optimizers and schedulers'''
+
+        return {
+            "opt1":self.opt1.state_dict(),
+            "opt2":self.opt2.state_dict(),
+            "Adamw":self.Adamw.state_dict(),
+            "Muon":self.Muon.state_dict()
+        }
+    
+    def load_state_dict(self,state_dict:dict) -> None:
+        ''' Loads the state dict of both optimizers and schedulers'''
+
+        self.opt1.load_state_dict(state_dict["opt1"])
+        self.opt2.load_state_dict(state_dict["opt2"])
+        self.Adamw.load_state_dict(state_dict["Adamw"])
+        self.Muon.load_state_dict(state_dict["Muon"])
