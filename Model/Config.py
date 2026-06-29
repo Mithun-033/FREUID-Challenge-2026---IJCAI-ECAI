@@ -28,3 +28,9 @@ class config:
     num_block4 : int = 3
 
     expansion_ratio : int = 6
+
+@dataclass
+class data_config:
+    batch_size : int = 32
+    num_workers : int = 4
+    prefetch_factor : int = 2
