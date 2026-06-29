@@ -39,7 +39,7 @@ class Data(Dataset):
         return len(self.labels)
 
     def __getitem__(self,idx):
-        img=decode_image(os.path.join(self.data_dir,self.image_paths[idx]))
+        img=decode_image(self.image_paths[idx])
         img=self.transform(img)
 
         label=self.labels[idx]
@@ -93,7 +93,7 @@ class dataloader(LightningDataModule):
             num_workers=self.config.num_workers,
             prefetch_factor=self.config.prefetch_factor,
             persistent_workers=True,
-            in_order=True
+            in_order=False
         )
         return loader
     
@@ -106,7 +106,7 @@ class dataloader(LightningDataModule):
             num_workers=self.config.num_workers,
             prefetch_factor=self.config.prefetch_factor,
             persistent_workers=True,
-            in_order=True
+            in_order=False
         )
         return loader
 
