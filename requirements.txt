@@ -1,0 +1,5 @@
+torch
+tqdm
+rich
+torchinfo
+torchvision
