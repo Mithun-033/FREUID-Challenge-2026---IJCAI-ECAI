@@ -28,6 +28,7 @@ class config:
     num_block4 : int = 3
 
     expansion_ratio : int = 6
+    layer_scale_init_value : float = 1e-6
 
 @dataclass
 class data_config:
