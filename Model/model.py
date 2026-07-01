@@ -241,7 +241,7 @@ if __name__ == "__main__":
     model = Model(config()).to(device)
     print("Model Loaded!")
 
-    # model=torch.compile(model).to(device)
+    # model=torch.compile(model, mode = "max-autotune", fullgraph = False).to(device)
 
     print("Generating summary...")
     summary(model, input_size=(1, 3, 224, 224))
