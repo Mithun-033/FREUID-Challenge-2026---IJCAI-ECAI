@@ -37,12 +37,9 @@ class train_config:
     Attributes:
         lr: Learning rate for the optimizer.
         weight_decay: Weight decay for the optimizer.
-        epochs: Number of training epochs.
     """
     lr : float = 1e-3
     weight_decay : float = 1e-2
-    epochs : int = 10
-
 
 @dataclass
 class data_config:
