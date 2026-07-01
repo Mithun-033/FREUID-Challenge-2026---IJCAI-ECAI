@@ -7,6 +7,7 @@ from Model.Config import config, data_config, train_config
 from Model.model import Model
 from data.Dataloaders import dataloader
 
+import argparse
 from rich import print, panel
 from tqdm import tqdm
 import sys
@@ -112,4 +113,8 @@ def train_model(epochs):
                 json.dump(recall_list, f)
                 
 if __name__ == "__main__":
-    train_model(epochs = 2)
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--epochs", type=int, default=2)
+    args = parser.parse_args()
+    train_model(epochs = args.epochs)
