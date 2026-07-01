@@ -30,8 +30,22 @@ class config:
     expansion_ratio : int = 6
     layer_scale_init_value : float = 1e-6
 
+@dataclass 
+class train_config:
+    """Hyper-parameter container for training parameters.
+
+    Attributes:
+        lr: Learning rate for the optimizer.
+        weight_decay: Weight decay for the optimizer.
+        epochs: Number of training epochs.
+    """
+    lr : float = 1e-3
+    weight_decay : float = 1e-2
+    epochs : int = 10
+
+
 @dataclass
 class data_config:
-    batch_size : int = 32
+    batch_size : int = 128
     num_workers : int = 4
     prefetch_factor : int = 2
