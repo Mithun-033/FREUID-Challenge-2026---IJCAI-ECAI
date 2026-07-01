@@ -3,3 +3,5 @@ tqdm
 rich
 torchinfo
 torchvision
+Lightning
+pandas
