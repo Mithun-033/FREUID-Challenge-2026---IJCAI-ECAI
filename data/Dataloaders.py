@@ -3,10 +3,15 @@ from lightning.pytorch import LightningDataModule
 import torchvision.transforms as transforms
 from torchvision.io import decode_image
 import pandas as pd
-import os
 
 
 class Data(Dataset):
+    '''Custom dataset class for loading images and labels from a CSV file.
+    Args:
+        Data_dir (str): Path to the directory containing the images.
+        labels_csv (str): Path to the CSV file containing image paths and labels.
+        is_train (bool): Flag indicating whether the dataset is for training or validation.
+    '''
     def __init__(self,Data_dir,labels_csv,is_train):
         super().__init__()
 
@@ -36,9 +41,16 @@ class Data(Dataset):
         self.transform=train_transform if is_train else val_transform
 
     def __len__(self):
+        '''Returns the total number of samples in the dataset.'''
         return len(self.labels)
 
     def __getitem__(self,idx):
+        '''Returns a single sample from the dataset.
+        Args:
+            idx (int): Index of the sample to retrieve.
+        Returns:
+            tuple: A tuple containing the image and its corresponding label.
+        '''
         img=decode_image(self.image_paths[idx])
         img=self.transform(img)
 
@@ -48,7 +60,18 @@ class Data(Dataset):
         
 
 class dataloader(LightningDataModule):
+    '''
+    Custom LightningDataModule for loading training and validation datasets.
+    '''
     def __init__(self,train_dir,train_labels,val_dir,val_labels,config):
+        '''Initializes the dataloader with training and validation directories, labels, and configuration.
+        Args:
+            train_dir (str): Path to the training images directory.
+            train_labels (str): Path to the training labels CSV file.
+            val_dir (str): Path to the validation images directory.
+            val_labels (str): Path to the validation labels CSV file.
+            config (data_config): Configuration dataclass containing hyperparameters for data loading.
+        '''
         super().__init__()
 
         self.train_dir=train_dir
@@ -63,6 +86,7 @@ class dataloader(LightningDataModule):
         self.val=None
 
     def prepare_data(self):
+        '''Prepares the data by asserting that the necessary paths and configuration are provided.'''
         assert self.train_dir is not None, "train dir path not provided"
         assert self.train_labels is not None,  "train labels csv path not provided"
 
@@ -72,6 +96,10 @@ class dataloader(LightningDataModule):
         assert self.val_labels is not None,  "val labels csv path not provided"
         
     def setup(self, stage=None):
+        '''Sets up the training and validation datasets by creating instances of the Data class.
+        Args:
+            stage (str, optional): Stage of the training process. Defaults to None.
+        '''
         self.train=Data(
             self.train_dir,
             self.train_labels,
@@ -85,6 +113,9 @@ class dataloader(LightningDataModule):
         )
 
     def train_dataloader(self):
+        '''
+        Returns the DataLoader for the training dataset.
+        '''
         loader = DataLoader(
             self.train,
             batch_size=self.config.batch_size,
@@ -98,6 +129,9 @@ class dataloader(LightningDataModule):
         return loader
     
     def val_dataloader(self):
+        '''
+        Returns the DataLoader for the validation dataset.
+        '''
         loader = DataLoader(
             self.val,
             batch_size=self.config.batch_size,
