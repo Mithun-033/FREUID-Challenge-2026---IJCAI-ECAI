@@ -51,13 +51,25 @@ class layernorm(nn.Module):
         return x
 
 class GRN(nn.Module):
+    '''Global Response Normalization (GRN) layer for channel-wise normalization.'''
     def __init__(self, channels):
+        '''
+        Initializes the GRN layer with learnable parameters gamma and beta.
+        Args:
+            channels (int): Number of channels in the input tensor.
+        '''
         super().__init__()
 
         self.gamma = nn.Parameter(torch.zeros(1, channels, 1, 1))
         self.beta = nn.Parameter(torch.zeros(1, channels, 1, 1))
 
     def forward(self,x):
+        '''Applies Global Response Normalization to the input tensor.
+        Args:
+            x (torch.Tensor): Input tensor of shape (B, C, H, W).
+        Returns:
+            torch.Tensor: Modified tensor after applying GRN, boosting the strength of strong signals and suppressing weaker ones.
+        '''
         gx = torch.norm(x, p = 2, dim = (-1, -2), keepdim = True)  # returns sqrt(a^2 + b^2 + c^2 ....) for all values in H, W.
         nx = gx/(gx.mean(dim = 1, keepdim = True) + 1e-6) # relative signal 
 
@@ -98,7 +110,7 @@ class ConvNext(nn.Module):
         )
 
         # stable early training, block adds ~ 0 to the output initally ...
-        self.layerscale = nn.Parameter(torch.ones((channels, 1, 1)) * config.layer_scale_init_value)  
+        self.layerscale = nn.Parameter(torch.ones((1, channels, 1, 1)) * config.layer_scale_init_value)  
 
     def forward(self, img):
         """Forward pass of the ConvNext block.
