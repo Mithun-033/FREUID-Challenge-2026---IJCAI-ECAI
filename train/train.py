@@ -18,7 +18,7 @@ device =torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train_model(epochs):
     model_con, data_con, train_con= config(), data_config(), train_config()
-    model = Model(model_con).to(device).to(torch.channels_last)
+    model = Model(model_con).to(device, memory_format = torch.channels_last)
     model = torch.compile(model, mode="max-autotune", fullgraph=False).to(device)
 
     optimizer = optim.AdamW(model.parameters(), lr=train_con.lr, weight_decay=train_con.weight_decay)
@@ -40,7 +40,7 @@ def train_model(epochs):
         train_dataloader, val_dataloader = data.train_dataloader, data.val_dataloader
         with tqdm(train_dataloader, desc = "Pretraining", file = sys.stdout) as pbar:
             for img, label in train_dataloader:
-                img, label = img.to(device), label.to(device)
+                img, label = img.to(device, memory_format = torch.channels_last), label.to(device)
                 
                 with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
                     output = model(img)
@@ -76,7 +76,7 @@ def train_model(epochs):
 
                     with torch.no_grad():
                         for x_val, y_val in val_dataloader:
-                            x_val = x_val.to(device)
+                            x_val = x_val.to(device, memory_format = torch.channels_last)
                             y_val = y_val.to(device)
 
                             with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
