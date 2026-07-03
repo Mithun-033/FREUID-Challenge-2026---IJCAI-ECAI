@@ -15,7 +15,7 @@ Classes:
 import torch
 import torch.nn as nn
 from torchinfo import summary
-from Config import config
+from .Config import config
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -70,7 +70,7 @@ class GRN(nn.Module):
         Returns:
             torch.Tensor: Modified tensor after applying GRN, boosting the strength of strong signals and suppressing weaker ones.
         '''
-        gx = torch.norm(x, p = 2, dim = (-1, -2), keepdim = True)  # returns sqrt(a^2 + b^2 + c^2 ....) for all values in H, W.
+        gx = torch.norm(x, p = 2, dim = (-1, -2), keepdim = True)  # returns scalar sqrt(a^2 + b^2 + c^2 ....) for all values in H, W.
         nx = gx/(gx.mean(dim = 1, keepdim = True) + 1e-6) # relative signal 
 
         return self.gamma * (x * nx) + x + self.beta
@@ -204,7 +204,7 @@ class Model(nn.Module):
         )
         self.down_sample_3 = DownSampler(config.dim3)
 
-        # (B,768,H//8,W//4)
+        # (B,768,H//8,W//8)
         self.block4 = nn.ModuleList(
             [ConvNext(config.dim4, config) for _ in range(config.num_block4)]
         )

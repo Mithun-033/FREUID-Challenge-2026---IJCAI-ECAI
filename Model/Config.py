@@ -27,7 +27,7 @@ class config:
     dim4 : int = 96*8
     num_block4 : int = 3
 
-    expansion_ratio : int = 6
+    expansion_ratio : int = 4
     layer_scale_init_value : float = 1e-6
 
 @dataclass 
@@ -43,6 +43,6 @@ class train_config:
 
 @dataclass
 class data_config:
-    batch_size : int = 128
-    num_workers : int = 4
+    batch_size : int = 32
+    num_workers : int = 2
     prefetch_factor : int = 2
