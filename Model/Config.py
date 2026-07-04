@@ -38,11 +38,12 @@ class train_config:
         lr: Learning rate for the optimizer.
         weight_decay: Weight decay for the optimizer.
     """
-    lr : float = 1e-3
-    weight_decay : float = 1e-2
+    lr : float = 2.5e-4
+    weight_decay : float = 5e-2
+    min_lr : float = 2.5e-6
 
 @dataclass
 class data_config:
-    batch_size : int = 32
-    num_workers : int = 2
+    batch_size : int = 64
+    num_workers : int = 4
     prefetch_factor : int = 2
