@@ -14,26 +14,22 @@ from tqdm import tqdm
 import sys
 import json
 
-# dynamo.config.verbose = True
-# torch.backends.cudnn.benchmark = True
-# torch.backends.cudnn.deterministic = False
-
 device =torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train_model(epochs):
     model_con, data_con, train_con= config(), data_config(), train_config()
     model = Model(model_con).to(device, memory_format = torch.channels_last)
-    model = torch.compile(model).to(device)
+    # model = torch.compile(model).to(device)
 
     optimizer = optim.AdamW(model.parameters(), lr=train_con.lr, weight_decay=train_con.weight_decay, fused = True)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = (40_005 -2857 + 29347 - 2143) / data_config.batch_size)
-    criterion = nn.BCEWithLogitsLoss(pos_weight = torch.tensor([(40_005 -2857) / (29347 - 2143)],device = device))
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = epochs * (68352) / data_config.batch_size, eta_min = train_con.min_lr)
+    criterion = nn.BCEWithLogitsLoss(pos_weight = torch.tensor([(40_005 - 571) / (29_347 - 429)],device = device))
 
     train_loss = []
-    # val_loss = []
-    # accuracy_list = []
-    # precision_list = []
-    # recall_list = []
+    val_loss = []
+    accuracy_list = []
+    precision_list = []
+    recall_list = []
 
     step = 0
     loss_acum = 0.0
@@ -67,56 +63,56 @@ def train_model(epochs):
                     pbar.set_postfix({"loss": avg_loss})
                     loss_acum = 0.0
 
-            #     if step % 20 == 0:
-            #         model.eval()
+                if step % 250 == 0:
+                    model.eval()
 
-            #         val_loss_accum = 0.0
+                    val_loss_accum = 0.0
 
-            #         acc_metric = torchmetrics.Accuracy(task="binary").to(device)
-            #         prec_metric = torchmetrics.Precision(task="binary").to(device)
-            #         rec_metric = torchmetrics.Recall(task="binary").to(device)
+                    acc_metric = torchmetrics.Accuracy(task="binary").to(device)
+                    prec_metric = torchmetrics.Precision(task="binary").to(device)
+                    rec_metric = torchmetrics.Recall(task="binary").to(device)
 
-            #         acc_metric.reset()
-            #         prec_metric.reset()
-            #         rec_metric.reset()
+                    acc_metric.reset()
+                    prec_metric.reset()
+                    rec_metric.reset()
 
-            #         with torch.no_grad():
-            #             for x_val, y_val in val_dataloader:
-            #                 x_val = x_val.to(device, memory_format = torch.channels_last)
-            #                 y_val = y_val.to(device).unsqueeze(1).float()
+                    with torch.no_grad():
+                        for x_val, y_val in val_dataloader:
+                            x_val = x_val.to(device, memory_format = torch.channels_last)
+                            y_val = y_val.to(device).unsqueeze(1).float()
 
-            #                 with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-            #                     output = model(x_val)
-            #                     loss = criterion(output, y_val)
+                            with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+                                output = model(x_val)
+                                loss = criterion(output, y_val)
 
-            #                 val_loss_accum += loss.item()
+                            val_loss_accum += loss.item()
 
-            #                 acc_metric.update(output, y_val.int())
-            #                 prec_metric.update(output, y_val.int())
-            #                 rec_metric.update(output, y_val.int())
+                            acc_metric.update(output, y_val.int())
+                            prec_metric.update(output, y_val.int())
+                            rec_metric.update(output, y_val.int())
 
-            #         avg_val_loss = val_loss_accum / len(val_dataloader)
-            #         avg_accuracy = acc_metric.compute().item()
-            #         avg_precision = prec_metric.compute().item()
-            #         avg_recall = rec_metric.compute().item()
+                    avg_val_loss = val_loss_accum / len(val_dataloader)
+                    avg_accuracy = acc_metric.compute().item()
+                    avg_precision = prec_metric.compute().item()
+                    avg_recall = rec_metric.compute().item()
 
-            #         val_loss.append(avg_val_loss)
-            #         accuracy_list.append(avg_accuracy)
-            #         precision_list.append(avg_precision)
-            #         recall_list.append(avg_recall)
+                    val_loss.append(avg_val_loss)
+                    accuracy_list.append(avg_accuracy)
+                    precision_list.append(avg_precision)
+                    recall_list.append(avg_recall)
 
-            #         model.train()
+                    model.train()
 
-            # with open("train_loss.json", "w") as f:
-            #     json.dump(train_loss, f)
-            # with open("val_loss.json", "w") as f:
-            #     json.dump(val_loss, f)
-            # with open("accuracy.json", "w") as f:
-            #     json.dump(accuracy_list, f)
-            # with open("precision.json", "w") as f:
-            #     json.dump(precision_list, f)
-            # with open("recall.json", "w") as f:
-            #     json.dump(recall_list, f)
+            with open("train_loss.json", "w") as f:
+                json.dump(train_loss, f)
+            with open("val_loss.json", "w") as f:
+                json.dump(val_loss, f)
+            with open("accuracy.json", "w") as f:
+                json.dump(accuracy_list, f)
+            with open("precision.json", "w") as f:
+                json.dump(precision_list, f)
+            with open("recall.json", "w") as f:
+                json.dump(recall_list, f)
 
             torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pt")
                 
