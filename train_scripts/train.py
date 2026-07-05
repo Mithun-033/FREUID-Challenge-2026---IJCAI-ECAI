@@ -45,10 +45,17 @@ def eval_model(model, criterion, val_dataloader, device):
     return avg_val_loss, avg_accuracy, avg_precision, avg_recall
 
 
-def train_model(epochs, model_con, data_con, train_con, device):
+def train_model(epochs, model_con, data_con, train_con, device, compile = False):
     
     model = Model(model_con).to(device, memory_format = torch.channels_last)
-    model = torch.compile(model).to(device)
+    if compile:
+        model = torch.compile(model).to(device)
+
+    params = 0
+    for param in model.parameters():
+        params += param.numel()
+
+    print(panel.Panel(f"Total number of parameters: {params:_}", style="blue"))
 
     optimizer = optim.AdamW(model.parameters(), lr=train_con.lr, weight_decay=train_con.weight_decay, fused = True)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = epochs * (68352) / data_config.batch_size, eta_min = train_con.min_lr)
@@ -126,4 +133,4 @@ if __name__ == "__main__":
 
     parser.add_argument("--epochs", type=int, default=10)
     args = parser.parse_args()
-    train_model(epochs = args.epochs, model_con = model_con,data_con = data_con, train_con = train_con, device = device)
+    train_model(epochs = args.epochs, model_con = model_con,data_con = data_con, train_con = train_con, device = device, compile = True)
