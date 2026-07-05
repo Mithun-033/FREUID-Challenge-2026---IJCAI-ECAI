@@ -211,7 +211,7 @@ class Model(nn.Module):
         self.global_pool = nn.AdaptiveAvgPool2d(1)
 
         # (B,768,1,1)
-        self.Linear = nn.Sequential(nn.Linear(config.dim4,256), nn.GELU(), nn.Linear(256, 1))
+        self.Linear = nn.Sequential(nn.Linear(config.dim4,config.linear_dim), nn.GELU(), nn.Linear(config.linear_dim, 1))
 
     def forward(self, img):
         """Forward pass for the full model.
