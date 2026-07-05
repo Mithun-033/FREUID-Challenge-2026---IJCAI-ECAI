@@ -18,17 +18,18 @@ class config:
     dim1 : int = 96
     num_block1 : int = 3
 
-    dim2 : int = 96*2
+    dim2 : int = dim1*2
     num_block2 : int = 3
 
-    dim3 : int = 96*4
+    dim3 : int = dim1*4
     num_block3 : int = 9
     
-    dim4 : int = 96*8
+    dim4 : int = dim1*8
     num_block4 : int = 3
 
     expansion_ratio : int = 4
     layer_scale_init_value : float = 1e-6
+    linear_dim : int = 256
 
 @dataclass 
 class train_config:
@@ -44,6 +45,7 @@ class train_config:
 
 @dataclass
 class data_config:
+    image_dim : int = 224
     batch_size : int = 64
     num_workers : int = 4
     prefetch_factor : int = 2
