@@ -12,8 +12,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def objective(trial, epochs):
 
-    lr = trial.suggest_float("lr", low=1e-4, high=1e-3)
-    weight_decay = trial.suggest_float("weight_decay", low=0.01, high=0.1)
+    lr = trial.suggest_float("lr", low=1e-4, high=5e-3, log = True)
+    weight_decay = trial.suggest_float("weight_decay", low=0.01, high=0.1, log = True)
     image_dim = trial.suggest_int("image_dim", low=224, high=512, step=16)
 
     num_block1 = trial.suggest_int("num_block1", low=2, high=5)
@@ -21,7 +21,7 @@ def objective(trial, epochs):
     num_block3 = trial.suggest_int("num_block3", low=9, high=12)
     num_block4 = trial.suggest_int("num_block4", low=3, high=6)
 
-    expansion_ratio = trial.suggest_int("expansion_ratio", low=4, high=8)
+    expansion_ratio = trial.suggest_int("expansion_ratio", low=2, high=8, step = 2)
 
     dim1 = trial.suggest_categorical("dim1", [84, 96, 108, 120])
     dim2 = dim1 * 2
@@ -104,7 +104,7 @@ if __name__ == "__main__":
         direction="minimize",
         storage="sqlite:///optuna_study.db",
         study_name="optuna_study",
-        load_if_exists=True,
+        load_if_exists=False
     )
     study.optimize(lambda trial: objective(trial, epochs=1), n_trials=5)
 
