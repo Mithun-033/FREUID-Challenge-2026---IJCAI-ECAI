@@ -13,7 +13,7 @@ class Data(Dataset):
         labels_csv (str): Path to the CSV file containing image paths and labels.
         is_train (bool): Flag indicating whether the dataset is for training or validation.
     '''
-    def __init__(self,Data_dir,labels_csv,is_train):
+    def __init__(self, Data_dir, labels_csv, config, is_train):
         super().__init__()
 
         dataframe=pd.read_csv(labels_csv)
@@ -24,7 +24,7 @@ class Data(Dataset):
 
         train_transform=transforms.Compose([
             transforms.ConvertImageDtype(torch.float32),
-            transforms.Resize((224,224)),
+            transforms.Resize((config.image_dim,config.image_dim)),
             transforms.ColorJitter(),
             transforms.Normalize(
                 mean=[0.485,0.456,0.406],
@@ -34,7 +34,7 @@ class Data(Dataset):
 
         val_transform=transforms.Compose([
             transforms.ConvertImageDtype(torch.float32),
-            transforms.Resize((224,224)),
+            transforms.Resize((config.image_dim,config.image_dim)),
             transforms.Normalize(
                 mean=[0.485,0.456,0.406],
                 std=[0.229, 0.224, 0.225]
@@ -106,12 +106,14 @@ class dataloader(LightningDataModule):
         self.train=Data(
             self.train_dir,
             self.train_labels,
-            is_train=True
+            self.config,
+            is_train=True, 
         )
         
         self.val=Data(
             self.val_dir,
             self.val_labels,
+            self.config,
             is_train=False
         )
 
