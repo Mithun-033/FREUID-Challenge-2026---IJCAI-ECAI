@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "lightning>=2.6.5",
+    "matplotlib>=3.11.0",
     "optuna>=4.9.0",
     "pandas>=3.0.3",
     "rich>=15.0.0",
