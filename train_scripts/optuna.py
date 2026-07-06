@@ -109,6 +109,7 @@ def objective(trial, epochs):
     )
 )   
     model = Model(optuna_model_config).to(device, memory_format = torch.channels_last)
+    model = torch.compile(model).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=optuna_train_config.lr, weight_decay=optuna_train_config.weight_decay, fused = True)
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.tensor([(40_005 - 571) / (29_347 - 429)],device = device))
     
