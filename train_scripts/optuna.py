@@ -51,6 +51,8 @@ def compute_freuid(model, device, val_loader, target_bpcer=0.01):
         "g_apcer": g_apcer,
     }
 
+global_best_freuid = float("inf")
+
 def objective(trial, epochs):
     lr = trial.suggest_float("lr", low=1e-4, high=5e-3, log = True)
     weight_decay = trial.suggest_float("weight_decay", low=0.01, high=0.1, log = True)
@@ -108,8 +110,8 @@ def objective(trial, epochs):
         expand=False,
     )
 )   
-    model = Model(optuna_model_config).to(device, memory_format = torch.channels_last)
-    model = torch.compile(model).to(device)
+    raw_model = Model(optuna_model_config).to(device, memory_format = torch.channels_last)
+    model = torch.compile(raw_model).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=optuna_train_config.lr, weight_decay=optuna_train_config.weight_decay, fused = True)
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.tensor([(40_005 - 571) / (29_347 - 429)],device = device))
     
@@ -133,7 +135,7 @@ def objective(trial, epochs):
     val_dataloader = data.val_dataloader()
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = epochs * len(train_dataloader), eta_min = optuna_train_config.min_lr)
-
+    global global_best_freuid
     for epoch in range(epochs):
         train(
             model,
@@ -152,6 +154,14 @@ def objective(trial, epochs):
         )
 
         freuid = freuid_metrics["freuid"]
+
+        if freuid < global_best_freuid:
+            global_best_freuid = freuid
+            torch.save(
+                raw_model.state_dict(),
+                "best_model_.pt",
+            )
+        
         trial.report(freuid, epoch)
         if trial.should_prune():
             val_loss, acc, rec, pre = eval_model(
