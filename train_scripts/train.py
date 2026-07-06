@@ -14,10 +14,9 @@ from tqdm import tqdm
 import sys
 import json
 
-
+@torch.no_grad()
 def eval_model(model, criterion, val_dataloader, device):
     model.eval()
-
     val_loss_accum = 0.0
     acc_metric = torchmetrics.Accuracy(task="binary").to(device)
     prec_metric = torchmetrics.Precision(task="binary").to(device)
@@ -44,6 +43,33 @@ def eval_model(model, criterion, val_dataloader, device):
 
     return avg_val_loss, avg_accuracy, avg_precision, avg_recall
 
+def train(model, criterion, optimizer, scheduler, train_dataloader, device, is_optuna = False):
+    step = 0
+    loss_acum = 0.0
+    with tqdm(train_dataloader, desc = "Pretraining", file = sys.stdout) as pbar:
+        for img, label in pbar:
+            img, label = img.to(device, memory_format = torch.channels_last), label.to(device).unsqueeze(1).float()
+            
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+                output = model(img)
+                loss = criterion(output, label)
+
+            loss.backward()
+            
+            optimizer.step()
+            scheduler.step()
+            optimizer.zero_grad(set_to_none = True)
+            
+            step += 1
+            loss_acum += loss.item()
+            
+            if step % 10 == 0:
+                avg_loss = loss_acum / 10
+                pbar.set_postfix({"loss": avg_loss})
+                loss_acum = 0.0
+
+        if is_optuna:
+            return model.state_dict()
 
 def train_model(epochs, model_con, data_con, train_con, device, compile = False):
     
@@ -61,56 +87,27 @@ def train_model(epochs, model_con, data_con, train_con, device, compile = False)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max = epochs * (68352) / data_config.batch_size, eta_min = train_con.min_lr)
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.tensor([(40_005 - 571) / (29_347 - 429)],device = device))
 
-    train_loss = []
     val_loss = []
     accuracy_list = []
     precision_list = []
     recall_list = []
 
-    step = 0
-    loss_acum = 0.0
-
     print(panel.Panel("Starting training ...",style="green"))
     for epoch in range(epochs):
-        data = dataloader(train_dir = "train/", train_labels = "train_labels.csv", val_dir = "val/", val_labels = "val_labels.csv", config = data_con)
-        data.setup()
-        data.prepare_data()
-        train_dataloader, val_dataloader = data.train_dataloader(), data.val_dataloader()
-        with tqdm(train_dataloader, desc = "Pretraining", file = sys.stdout) as pbar:
-            for img, label in pbar:
-                img, label = img.to(device, memory_format = torch.channels_last), label.to(device).unsqueeze(1).float()
-                
-                with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-                    output = model(img)
-                    loss = criterion(output, label)
-    
-                loss.backward()
-                
-                optimizer.step()
-                scheduler.step()
-                optimizer.zero_grad(set_to_none = True)
-                
-                step += 1
-                loss_acum += loss.item()
-                
-                if step % 10 == 0:
-                    avg_loss = loss_acum / 10
-                    train_loss.append(avg_loss)
-                    pbar.set_postfix({"loss": avg_loss})
-                    loss_acum = 0.0
+            data = dataloader(train_dir = "train/", train_labels = "train_labels.csv", val_dir = "val/", val_labels = "val_labels.csv", config = data_con)
+            data.setup()
+            data.prepare_data()
+            train_dataloader, val_dataloader = data.train_dataloader(), data.val_dataloader()
 
-                if step % 250 == 0:
-                    avg_val_loss, avg_accuracy, avg_precision, avg_recall = eval_model(model, criterion, val_dataloader, device)
+            train(model, criterion, optimizer, scheduler, train_dataloader, device)
+            
+            avg_val_loss, avg_accuracy, avg_precision, avg_recall = eval_model(model, criterion, val_dataloader, device)
+            val_loss.append(avg_val_loss)
+            accuracy_list.append(avg_accuracy)
+            precision_list.append(avg_precision)
+            recall_list.append(avg_recall)
+            model.train()
 
-                    val_loss.append(avg_val_loss)
-                    accuracy_list.append(avg_accuracy)
-                    precision_list.append(avg_precision)
-                    recall_list.append(avg_recall)
-
-                    model.train()
-
-            with open("train_loss.json", "w") as f:
-                json.dump(train_loss, f)
             with open("val_loss.json", "w") as f:
                 json.dump(val_loss, f)
             with open("accuracy.json", "w") as f:
