@@ -157,6 +157,7 @@ def objective(trial, epochs):
 
         if freuid < global_best_freuid:
             global_best_freuid = freuid
+            print(panel.Panel(f"New best FREUID: {freuid:.6f} at epoch {epoch + 1}", style="green"))
             torch.save(
                 raw_model.state_dict(),
                 "best_model_.pt",
