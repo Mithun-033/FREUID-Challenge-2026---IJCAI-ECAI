@@ -212,6 +212,18 @@ class Model(nn.Module):
 
         # (B,768,1,1)
         self.Linear = nn.Sequential(nn.Linear(config.dim4,config.linear_dim), nn.GELU(), nn.Linear(config.linear_dim, 1))
+        self.apply(self._init_weights)
+        
+    def _init_weights(self, module):
+        if isinstance(module, nn.Conv2d):
+            nn.init.trunc_normal_(module.weight, std=0.02)
+            if module.bias is not None:
+                nn.init.constant_(module.bias, 0)
+
+        if isinstance(module, nn.Linear):
+            nn.init.normal_(module.weight, std=0.02)
+            if module.bias is not None:
+                nn.init.constant_(module.bias, 0)
 
     def forward(self, img):
         """Forward pass for the full model.
