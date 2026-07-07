@@ -35,6 +35,24 @@ df_val["image_path"] = df_val["image_path"].str[6:]
 df.to_csv("train_labels.csv", index=False)
 df_val.to_csv("val_labels.csv", index=False)
 
+train_dir_count=len([
+    f for f in os.listdir("train/train")
+    if os.path.isfile(os.path.join("train/train",f))
+])
+
+val_dir_count=len([
+    f for f in os.listdir("val")
+    if os.path.isfile(os.path.join("val",f))
+])
+
+train_labels_count=len(pd.read_csv("train_labels.csv"))
+val_labels_count=len(pd.read_csv("val_labels.csv"))
+
+print(f"train/train directory: {train_dir_count} files")
+print(f"val directory: {val_dir_count} files")
+print(f"train_labels.csv: {train_labels_count} rows")
+print(f"val_labels.csv: {val_labels_count} rows")
+
 
 
 
