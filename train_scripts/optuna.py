@@ -209,7 +209,7 @@ def objective(trial, epochs):
 if __name__ == "__main__":
 
     pruner = optuna.pruners.HyperbandPruner(
-        min_resource = 3,
+        min_resource = 4,
         max_resource = "auto",
         reduction_factor = 2
     )
@@ -221,7 +221,7 @@ if __name__ == "__main__":
         pruner=pruner,
         load_if_exists=False
     )
-    study.optimize(lambda trial: objective(trial, epochs=30), n_trials=100)
+    study.optimize(lambda trial: objective(trial, epochs=12), n_trials=50)
 
     print("Best trial:")
     trial = study.best_trial
