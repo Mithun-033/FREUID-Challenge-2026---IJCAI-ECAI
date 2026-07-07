@@ -43,7 +43,7 @@ def eval_model(model, criterion, val_dataloader, device):
 
     return avg_val_loss, avg_accuracy, avg_precision, avg_recall
 
-def train(model, criterion, optimizer, scheduler, train_dataloader, device, is_optuna = False):
+def train(model, criterion, optimizer, scheduler, train_dataloader, device):
     step = 0
     loss_acum = 0.0
     with tqdm(train_dataloader, desc = "Pretraining", file = sys.stdout) as pbar:
@@ -67,9 +67,6 @@ def train(model, criterion, optimizer, scheduler, train_dataloader, device, is_o
                 avg_loss = loss_acum / 10
                 pbar.set_postfix({"loss": avg_loss})
                 loss_acum = 0.0
-
-        if is_optuna:
-            return model.state_dict()
 
 def train_model(epochs, model_con, data_con, train_con, device, compile = False):
     
