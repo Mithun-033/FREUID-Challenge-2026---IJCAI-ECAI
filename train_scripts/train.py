@@ -46,6 +46,7 @@ def eval_model(model, criterion, val_dataloader, device):
 def train(model, criterion, optimizer, scheduler, train_dataloader, device):
     step = 0
     loss_acum = 0.0
+    model.train()
     with tqdm(train_dataloader, desc = "Pretraining", file = sys.stdout) as pbar:
         for img, label in pbar:
             img, label = img.to(device, memory_format = torch.channels_last), label.to(device).unsqueeze(1).float()
