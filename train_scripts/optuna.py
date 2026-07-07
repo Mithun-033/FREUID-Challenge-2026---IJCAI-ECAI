@@ -13,6 +13,16 @@ from data.Dataloaders import dataloader
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+def _apcer_at_bpcer(bpcer: np.ndarray, apcer: np.ndarray, target: float) -> float:
+    """Largest achievable APCER at BPCER <= target (step-function, no interpolation)."""
+    eps = 1e-12
+    feasible = bpcer <= target + eps
+    if not feasible.any():
+        return 1.0
+    idx = int(np.flatnonzero(feasible).max())
+    return float(apcer[idx])
+
+
 @torch.no_grad()
 def compute_freuid(model, device, val_loader, target_bpcer=0.01):
     """
@@ -21,36 +31,34 @@ def compute_freuid(model, device, val_loader, target_bpcer=0.01):
     """
     model.eval()
     all_scores, all_labels = [], []
-
     for inputs, labels in val_loader:
         inputs = inputs.to(device)
         logits = model(inputs).squeeze(-1)
-        probs = torch.sigmoid(logits) 
+        probs = torch.sigmoid(logits)
 
         all_scores.append(probs.detach().cpu().numpy())
         all_labels.append(labels.detach().cpu().numpy())
 
     scores = np.concatenate(all_scores)
     labels = np.concatenate(all_labels)
-
-    fpr, tpr, _ = roc_curve(labels, scores, pos_label=1)
+    fpr, tpr, _ = roc_curve(labels, scores, pos_label=1, drop_intermediate=False)
     fnr = 1 - tpr
 
-    audet = 1 - auc(fpr, tpr)
-
-    apcer_at_target = float(np.interp(target_bpcer, fpr, fnr))
+    bpcer = fpr
+    apcer = fnr
+    audet = 1 - auc(bpcer, tpr)  
+    apcer_at_target = _apcer_at_bpcer(bpcer, apcer, target_bpcer)
 
     g_audet = 1 - audet
     g_apcer = 1 - apcer_at_target
     denom = g_audet + g_apcer
-    freuid = 1.0 if denom == 0 else 1 - 2 * g_audet * g_apcer / denom
+    freuid = 1.0 if denom <= 0.0 else 1 - 2 * g_audet * g_apcer / denom
 
     return {
         "freuid": freuid,
         "g_audet": g_audet,
         "g_apcer": g_apcer,
     }
-
 global_best_freuid = float("inf")
 
 def objective(trial, epochs):
