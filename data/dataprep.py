@@ -31,7 +31,7 @@ for index, row in df.iterrows():
         break
 
 df.drop(remove_idx, inplace=True)
-df_val["image_path"] = df["image_path"].str[6:]
+df_val["image_path"] = df_val["image_path"].str[6:]
 df.to_csv("train_labels.csv", index=False)
 df_val.to_csv("val_labels.csv", index=False)
 
