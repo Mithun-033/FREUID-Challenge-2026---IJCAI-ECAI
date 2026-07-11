@@ -162,7 +162,7 @@ def objective(trial, epochs):
         )
 
         freuid = freuid_metrics["freuid"]
-
+        print(panel.Panel(f"Epoch {epoch + 1}/{epochs} - FREUID: {freuid:.6f}", style="yellow"))
         if freuid < global_best_freuid:
             global_best_freuid = freuid
             print(panel.Panel(f"New best FREUID: {freuid:.6f} at epoch {epoch + 1}", style="green"))
@@ -221,7 +221,7 @@ if __name__ == "__main__":
         pruner=pruner,
         load_if_exists=False
     )
-    study.optimize(lambda trial: objective(trial, epochs=12), n_trials=50)
+    study.optimize(lambda trial: objective(trial, epochs=15), n_trials=50)
 
     print("Best trial:")
     trial = study.best_trial
