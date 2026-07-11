@@ -15,11 +15,11 @@ class config:
         num_block4: Number of `ConvNext` blocks in the fourth stage.
     """
 
-    dim1 : int = 96
-    num_block1 : int = 3
+    dim1 : int = 108
+    num_block1 : int = 4
 
     dim2 : int = dim1*2
-    num_block2 : int = 3
+    num_block2 : int = 2
 
     dim3 : int = dim1*4
     num_block3 : int = 9
@@ -28,8 +28,9 @@ class config:
     num_block4 : int = 3
 
     expansion_ratio : int = 4
-    layer_scale_init_value : float = 1e-6
-    linear_dim : int = 256
+    layer_scale_init_value : float = 1e-1
+    linear_dim : int = 512
+    patch_size : int = 4
 
 @dataclass 
 class train_config:
@@ -41,11 +42,11 @@ class train_config:
     """
     lr : float = 2.5e-4
     weight_decay : float = 5e-2
-    min_lr : float = 2.5e-6
+    min_lr : float = lr * 0.1
 
 @dataclass
 class data_config:
-    image_dim : int = 224
-    batch_size : int = 64
+    image_dim : int = 352
+    batch_size : int = 16
     num_workers : int = 4
     prefetch_factor : int = 2

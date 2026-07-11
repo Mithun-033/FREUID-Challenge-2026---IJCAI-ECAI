@@ -132,7 +132,7 @@ class ConvNext(nn.Module):
         out = self.grn(out)
         out = self.down_proj(out)  # (B,C,H,W)
 
-        out = self.layerscale * out + img
+        out = self.layerscale *out + img
 
         return out
 
@@ -183,7 +183,7 @@ class Model(nn.Module):
 
         # (B,3,H,W)
         self.stem = nn.Conv2d(
-            in_channels=3, out_channels=config.dim1, kernel_size=4, stride=4
+            in_channels=3, out_channels=config.dim1, kernel_size=config.patch_size, stride=config.patch_size
         )
 
         # (B,96,H,W)
@@ -212,18 +212,18 @@ class Model(nn.Module):
 
         # (B,768,1,1)
         self.Linear = nn.Sequential(nn.Linear(config.dim4,config.linear_dim), nn.GELU(), nn.Linear(config.linear_dim, 1))
-        self.apply(self._init_weights)
+        # self.apply(self._init_weights)
         
-    def _init_weights(self, module):
-        if isinstance(module, nn.Conv2d):
-            nn.init.trunc_normal_(module.weight, std=0.02)
-            if module.bias is not None:
-                nn.init.constant_(module.bias, 0)
+    # def _init_weights(self, module):
+    #     if isinstance(module, nn.Conv2d):
+    #         nn.init.trunc_normal_(module.weight, std=0.02)
+    #         if module.bias is not None:
+    #             nn.init.constant_(module.bias, 0)
 
-        if isinstance(module, nn.Linear):
-            nn.init.normal_(module.weight, std=0.02)
-            if module.bias is not None:
-                nn.init.constant_(module.bias, 0)
+    #     if isinstance(module, nn.Linear):
+    #         nn.init.normal_(module.weight, std=0.02)
+    #         if module.bias is not None:
+    #             nn.init.constant_(module.bias, 0)
 
     def forward(self, img):
         """Forward pass for the full model.
@@ -258,7 +258,6 @@ class Model(nn.Module):
         x = self.Linear(x)
 
         return x
-
 
 if __name__ == "__main__":
     print("Loading model...")
